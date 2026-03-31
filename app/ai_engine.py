@@ -28,6 +28,8 @@ def generate_questions_from_resume(text):
         "Content-Type": "application/json"
     }
 
+    print("API KEY:", API_KEY)  # 🔥 DEBUG
+
     prompt = "Generate 5 personalized interview questions based on this resume. Return ONLY JSON in this format: [{\"text\":\"question\"}] Resume: " + text
 
     data = {
@@ -76,12 +78,14 @@ def evaluate_answer(question, answer, resume_text):
 
     url = "https://openrouter.ai/api/v1/chat/completions"
 
-    prompt = "Evaluate this answer and return JSON with score, strengths, weaknesses, feedback. Resume: " + resume_text + " Question: " + question + " Answer: " + answer
-
     headers = {
         "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json"
     }
+
+    print("API KEY:", API_KEY)  # 🔥 DEBUG
+
+    prompt = "Evaluate this answer and return JSON with score, strengths, weaknesses, feedback. Resume: " + resume_text + " Question: " + question + " Answer: " + answer
 
     data = {
         "model": "openai/gpt-3.5-turbo",
@@ -93,6 +97,10 @@ def evaluate_answer(question, answer, resume_text):
 
     try:
         response = requests.post(url, headers=headers, json=data)
+
+        if response.status_code != 200:
+            print("API ERROR:", response.text)
+            return None
 
         result = response.json()
         content = result["choices"][0]["message"]["content"]
@@ -147,6 +155,8 @@ def generate_ai_feedback(answers):
         "Content-Type": "application/json"
     }
 
+    print("API KEY:", API_KEY)  # 🔥 DEBUG
+
     qa_text = ""
     for a in answers:
         qa_text += "Question: " + a.question.text + " Answer: " + a.answer + " Score: " + str(a.score)
@@ -163,6 +173,10 @@ def generate_ai_feedback(answers):
 
     try:
         response = requests.post(url, headers=headers, json=data)
+
+        if response.status_code != 200:
+            print("API ERROR:", response.text)
+            return None
 
         result = response.json()
         content = result["choices"][0]["message"]["content"]
