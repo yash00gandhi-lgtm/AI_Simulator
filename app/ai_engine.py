@@ -1,4 +1,5 @@
 import pdfplumber
+import os
 
 import requests
 
@@ -15,7 +16,7 @@ def extract_text_from_pdf(file_path):
 
 
 
-API_KEY = "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"
+API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 def generate_questions_from_resume(text):
 
@@ -88,7 +89,7 @@ Resume:
 
 
 
-OPENROUTER_API_KEY = "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"
+API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 def evaluate_answer(question, answer, resume_text):
     import requests, json, re
