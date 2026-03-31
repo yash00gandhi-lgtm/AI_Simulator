@@ -24,9 +24,11 @@ def generate_questions_from_resume(text):
     url = "https://openrouter.ai/api/v1/chat/completions"
 
     headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
+    "Authorization": f"Bearer {API_KEY}",
+    "Content-Type": "application/json",
+    "HTTP-Referer": "https://ai-interview-simulator1.onrender.com",
+    "X-Title": "AI Interview Simulator"
+}
 
     print("API KEY:", API_KEY)  # 🔥 DEBUG
 
@@ -79,9 +81,11 @@ def evaluate_answer(question, answer, resume_text):
     url = "https://openrouter.ai/api/v1/chat/completions"
 
     headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
+    "Authorization": f"Bearer {API_KEY}",
+    "Content-Type": "application/json",
+    "HTTP-Referer": "https://ai-interview-simulator1.onrender.com",
+    "X-Title": "AI Interview Simulator"
+}
 
     print("API KEY:", API_KEY)  # 🔥 DEBUG
 
@@ -151,9 +155,11 @@ def generate_ai_feedback(answers):
     url = "https://openrouter.ai/api/v1/chat/completions"
 
     headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
+    "Authorization": f"Bearer {API_KEY}",
+    "Content-Type": "application/json",
+    "HTTP-Referer": "https://ai-interview-simulator1.onrender.com",
+    "X-Title": "AI Interview Simulator"
+}
 
     print("API KEY:", API_KEY)  # 🔥 DEBUG
 
