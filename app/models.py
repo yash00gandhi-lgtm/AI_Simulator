@@ -41,7 +41,8 @@ class Question(models.Model):
 # ANSWER (SIMPLIFIED 🔥)
 # =========================
 class Answer(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+
 
     question_text = models.TextField()
     answer_text = models.TextField()

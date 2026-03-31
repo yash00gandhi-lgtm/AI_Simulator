@@ -171,7 +171,6 @@ def submit_answer(request):
 
     try:
         data = json.loads(request.body)
-        print("DATA RECEIVED:", data)
 
         question_text = data.get("question")
         answer_text = data.get("answer")
@@ -179,46 +178,33 @@ def submit_answer(request):
         if not question_text or not answer_text:
             return JsonResponse({"error": "Missing data"}, status=400)
 
-        print("QUESTION:", question_text)
-        print("ANSWER:", answer_text)
-
-        # 🔥 SAFE USER (IMPORTANT FIX)
+        # ✅ USER FIX
         user = request.user if request.user.is_authenticated else None
 
-        # 🔥 TEMP DISABLE AI (to avoid crash)
+        # ✅ AI SAFE
         try:
-            # evaluation = evaluate_answer(question_text, answer_text, "")
-            # score = evaluation.get("score", 60)
-            # feedback = evaluation.get("feedback", "Good attempt")
-
-            score = 70
-            feedback = "Good answer"
-
+            evaluation = evaluate_answer(question_text, answer_text, "")
+            score = evaluation.get("score", 60)
+            feedback = evaluation.get("feedback", "Good attempt")
         except Exception as e:
             print("AI ERROR:", e)
             score = 60
-            feedback = "AI failed, default score"
+            feedback = "AI failed"
 
-        # 🔥 SAFE DB SAVE
-        try:
-            Answer.objects.create(
-                user=user,
-                question_text=question_text,
-                answer_text=answer_text,
-                score=score,
-                feedback=feedback
-            )
-        except Exception as e:
-            print("DB ERROR:", e)
-            return JsonResponse({"error": "DB failed"}, status=500)
+        # ✅ DB SAVE
+        Answer.objects.create(
+            user=user,
+            question_text=question_text,
+            answer_text=answer_text,
+            score=score,
+            feedback=feedback
+        )
 
         return JsonResponse({"message": "Answer saved"}, status=200)
 
     except Exception as e:
         print("FINAL ERROR:", e)
         return JsonResponse({"error": "Server error"}, status=500)
-
-
 # =========================
 # RESULT
 # =========================
