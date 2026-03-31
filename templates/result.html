@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="ax-container text-center">
+
+    <div class="mb-5 fade-in">
+        <h1 class="glow-text">AI Interview Report 💎</h1>
+        <p class="text-secondary">Your performance analyzed by AI</p>
+    </div>
+
+    <div id="resultBox" class="ax-card">
+        <h5 class="text-warning">Analyzing your answers with AI... 🤖</h5>
+    </div>
+
+</div>
+
+<script>
+
+function renderList(arr) {
+    if (!arr || arr.length === 0) {
+        return "<p class='text-secondary'>No data available</p>";
+    }
+
+    return `
+        <ul style="text-align:left;">
+            ${arr.map(item => `<li>${item}</li>`).join("")}
+        </ul>
+    `;
+}
+
+function getScoreColor(score) {
+    if (score >= 75) return "#22c55e";
+    if (score >= 50) return "#facc15";
+    return "#ef4444";
+}
+
+async function loadResult() {
+
+    try {
+        const res = await fetch("/api/result/", {
+            method: "GET"
+        });
+
+        const data = await res.json();
+
+        const box = document.getElementById("resultBox");
+
+        const score = data.score || 0;
+        const color = getScoreColor(score);
+
+        box.innerHTML = `
+
+            <div class="mb-4">
+                <h2>Overall Score</h2>
+                <h1 style="color:${color}; font-size:60px; text-shadow:0 0 20px ${color}">
+                    ${score.toFixed(1)}
+                </h1>
+                <p class="text-secondary">out of 100</p>
+            </div>
+
+            <hr>
+
+            <div class="row text-start mt-4">
+
+                <div class="col-md-6 mb-3">
+                    <div class="ax-card">
+                        <h4 class="glow-text">💪 Strengths</h4>
+                        ${renderList(data.strengths)}
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="ax-card">
+                        <h4 class="text-warning">⚠️ Weaknesses</h4>
+                        ${renderList(data.weaknesses)}
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="mt-4 text-start ax-card">
+                <h4 class="glow-text">🧠 AI Feedback</h4>
+                <p>${data.feedback || "Keep improving 🚀"}</p>
+            </div>
+
+            <div class="mt-5 text-center">
+                <a href="/upload/" class="ax-btn">
+                    🚀 Try Again
+                </a>
+            </div>
+        `;
+
+    } catch (error) {
+
+        document.getElementById("resultBox").innerHTML = `
+            <h5 class="text-danger">Error loading result ❌</h5>
+        `;
+    }
+}
+
+// 🚀 load instantly
+loadResult();
+
+</script>
+
+{% endblock %}

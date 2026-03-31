@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="ax-container">
+
+    <!-- 🔥 HEADING -->
+    <div class="text-center mb-5 fade-in">
+        <h1 class="glow-text">Dashboard ⚡</h1>
+        <p class="text-secondary">Track your AI interview performance</p>
+    </div>
+
+    <!-- 💎 STATS -->
+    <div class="row text-center">
+
+        <!-- Total Attempts -->
+        <div class="col-md-4 mb-4">
+            <div class="ax-card">
+                <h6 class="text-secondary">Total Attempts</h6>
+                <h1 id="totalAttempts" class="glow-text">--</h1>
+            </div>
+        </div>
+
+        <!-- Average Score -->
+        <div class="col-md-4 mb-4">
+            <div class="ax-card">
+                <h6 class="text-secondary">Average Score</h6>
+                <h1 id="avgScore" class="glow-text">--</h1>
+            </div>
+        </div>
+
+        <!-- Latest Score -->
+        <div class="col-md-4 mb-4">
+            <div class="ax-card">
+                <h6 class="text-secondary">Latest Score</h6>
+                <h1 id="latestScore" class="glow-text">--</h1>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 🚀 ACTION SECTION -->
+    <div class="text-center mt-5">
+        <div class="ax-card d-inline-block p-4">
+            <h4 class="mb-3">Start a New AI Interview</h4>
+            <button onclick="startInterview()" class="ax-btn">
+    🚀 Start Interview
+</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+// 🔐 GET CSRF TOKEN (for safety)
+function getCSRFToken() {
+    return document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+}
+
+// 🚀 START INTERVIEW (CRITICAL FIX)
+async function startInterview() {
+
+    try {
+        const res = await fetch("/api/start-interview/", {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "X-CSRFToken": getCSRFToken()
+            }
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            window.location.href = "/upload/";
+        } else {
+            alert(data.error || "Failed to start interview ❌");
+        }
+
+    } catch (err) {
+        console.error("START ERROR:", err);
+        alert("Server error ❌");
+    }
+}
+
+// 📊 LOAD DASHBOARD STATS
+async function loadStats() {
+
+    try {
+        const res = await fetch('/api/dashboard-stats/', {
+            method: "GET",
+            credentials: "include"
+        });
+
+        const data = await res.json();
+
+        document.getElementById('totalAttempts').innerText = data.total ?? 0;
+        document.getElementById('avgScore').innerText = data.average ?? 0;
+        document.getElementById('latestScore').innerText = data.latest ?? 0;
+
+    } catch (err) {
+        console.log("Error loading stats", err);
+    }
+
+    if (typeof hideLoader === "function") {
+        hideLoader();
+    }
+}
+
+// 🔥 INIT
+loadStats();
+
+</script>
+
+{% endblock %}

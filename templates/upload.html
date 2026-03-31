@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+
+    <div class="ax-card text-center" style="width: 450px;">
+
+        <h2 class="glow-text mb-2">Upload Resume 📄</h2>
+        <p class="text-secondary mb-4">Let AI analyze your resume & generate interview questions</p>
+
+        <!-- 📂 UPLOAD -->
+        <form id="uploadForm">
+            {% csrf_token %}
+
+            <input type="file" id="fileInput" class="ax-input w-100 mb-3" required>
+
+            <button id="uploadBtn" type="submit" class="ax-btn w-100">
+                🚀 Upload Resume
+            </button>
+        </form>
+
+        <!-- 🤖 GENERATE -->
+        <div class="mt-4">
+            <button id="generateBtn" class="ax-btn w-100 d-none">
+                🤖 Generate AI Questions
+            </button>
+        </div>
+
+        <p id="status" class="mt-3 text-success"></p>
+
+    </div>
+
+</div>
+
+<script>
+
+// 🔐 CSRF
+function getCSRFToken() {
+    return document.cookie.split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+}
+
+// 📂 UPLOAD RESUME
+document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const btn = document.getElementById("uploadBtn");
+    const fileInput = document.getElementById("fileInput");
+
+    btn.innerText = "Uploading...";
+    btn.disabled = true;
+
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+
+    try {
+        const res = await fetch("/api/upload/", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "X-CSRFToken": getCSRFToken()
+            },
+            body: formData
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            document.getElementById("status").innerText = "Uploaded & Parsed ✅";
+
+            // 🔥 show generate button
+            document.getElementById("generateBtn").classList.remove("d-none");
+        } else {
+            document.getElementById("status").innerText = data.error || "Upload failed ❌";
+        }
+
+    } catch (err) {
+        document.getElementById("status").innerText = "Server error ❌";
+    }
+
+    btn.innerText = "🚀 Upload Resume";
+    btn.disabled = false;
+});
+
+
+// 🤖 GENERATE QUESTIONS
+document.getElementById("generateBtn").addEventListener("click", async function() {
+
+    const btn = this;
+    btn.innerText = "Generating...";
+    btn.disabled = true;
+
+    try {
+        const res = await fetch("/api/questions/", {
+            method: "GET",
+            credentials: "include"
+        });
+
+        const data = await res.json();
+
+        if (!data.questions || data.questions.length === 0) {
+            alert("No questions generated ❌");
+            return;
+        }
+
+        // 💾 SAVE
+        localStorage.setItem("questions", JSON.stringify(data.questions));
+
+        // 🔁 REDIRECT
+        window.location.href = "/questions/";
+
+    } catch (err) {
+        alert("Error generating questions ❌");
+    }
+
+    btn.innerText = "🤖 Generate AI Questions";
+    btn.disabled = false;
+});
+
+</script>
+
+{% endblock %}

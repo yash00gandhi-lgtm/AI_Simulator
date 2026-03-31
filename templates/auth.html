@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 85vh;">
+
+    <div class="ax-card text-center" style="width: 420px;">
+
+        <!-- 🔥 TITLE -->
+        <h2 class="glow-text mb-2">Welcome Back 🔐</h2>
+        <p class="text-secondary mb-4">Login to continue your AI interview journey</p>
+
+        <!-- 📧 EMAIL -->
+        <input id="email" placeholder="Enter Email"
+            class="ax-input w-100 mb-3">
+
+        <!-- 🔒 PASSWORD -->
+        <input id="password" type="password" placeholder="Enter Password"
+            class="ax-input w-100 mb-3">
+
+        <!-- 🚀 LOGIN BUTTON -->
+        <button type="button" onclick="login()" id="loginBtn" class="ax-btn w-100 text-dark">
+    🚀 Login
+</button>
+        <!-- ❌ ERROR BOX -->
+        <div id="errorBox" class="mt-3 d-none" style="background: rgba(239,68,68,0.1); border-radius:10px;">
+            <span class="text-danger" id="errorText"></span>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+function getCSRFToken() {
+    return document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+}
+
+async function login() {
+
+    const btn = document.getElementById("loginBtn");
+    const errorBox = document.getElementById("errorBox");
+    const errorText = document.getElementById("errorText");
+
+    errorBox.classList.add("d-none");
+
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    if (!email || !password) {
+        errorText.innerText = "Fill all fields ❌";
+        errorBox.classList.remove("d-none");
+        return;
+    }
+
+    btn.innerText = "Logging in... ⏳";
+    btn.disabled = true;
+
+    try {
+
+        const res = await fetch("/api/login/", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCSRFToken()
+            },
+            body: JSON.stringify({
+                email,
+                password
+            })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            window.location.href = "/dashboard/";
+        } else {
+            errorText.innerText = data.error || "Login failed ❌";
+            errorBox.classList.remove("d-none");
+        }
+
+    } catch (err) {
+        errorText.innerText = "Server error ❌";
+        errorBox.classList.remove("d-none");
+    }
+
+    btn.innerText = "🚀 Login";
+    btn.disabled = false;
+}
+</script>
+
+{% endblock %}

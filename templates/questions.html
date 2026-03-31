@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="ax-container">
+
+    <div class="text-center mb-5 fade-in">
+        <h1 class="glow-text">AI Interview 🚀</h1>
+        <p class="text-secondary">Answer carefully — AI will evaluate you</p>
+    </div>
+
+    <form id="answerForm">
+
+        <div id="questionsContainer"></div>
+
+        <button id="submitBtn" type="submit" class="ax-btn w-100 mt-4">
+            🚀 Submit Answers
+        </button>
+
+    </form>
+
+</div>
+
+<script>
+
+// 📦 LOAD QUESTIONS
+const questions = JSON.parse(localStorage.getItem("questions")) || [];
+const container = document.getElementById("questionsContainer");
+
+if (questions.length === 0) {
+    container.innerHTML = "<p class='text-danger text-center'>No questions found ❌</p>";
+} else {
+
+    let html = "";
+
+    questions.forEach((q, index) => {
+        html += `
+            <div class="card mb-4 p-3">
+                <h5>Q${index + 1}</h5>
+                <p>${q.question || q}</p>
+
+                <textarea 
+                    id="ans_${index}" 
+                    class="form-control mt-2" 
+                    placeholder="Your answer..." 
+                    required
+                ></textarea>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+
+// 🚀 SUBMIT HANDLER
+document.getElementById("answerForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    console.log("FORM SUBMIT TRIGGERED"); // 🔥 debug
+
+    const btn = document.getElementById("submitBtn");
+
+    btn.innerText = "Evaluating... 🤖";
+    btn.disabled = true;
+
+    try {
+
+        // 🔥 LOOP THROUGH ALL QUESTIONS
+        for (let i = 0; i < questions.length; i++) {
+
+            const value = document.getElementById(`ans_${i}`).value;
+
+            if (!value.trim()) {
+                alert("Fill all answers ❌");
+                btn.innerText = "🚀 Submit Answers";
+                btn.disabled = false;
+                return;
+            }
+
+            console.log("Sending:", questions[i], value); // 🔥 debug
+
+            const res = await fetch("/api/answer/", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    question: questions[i].question || questions[i],  // 🔥 SAFE
+                    answer: value
+                })
+            });
+
+            if (!res.ok) {
+                alert("Failed to save answer ❌");
+                btn.innerText = "🚀 Submit Answers";
+                btn.disabled = false;
+                return;
+            }
+        }
+
+        // 🔥 WAIT BEFORE REDIRECT (IMPORTANT FIX)
+        setTimeout(() => {
+            window.location.href = "/result/";
+        }, 500);
+
+    } catch (err) {
+        console.error("ERROR:", err);
+        alert("Server error ❌");
+
+        btn.innerText = "🚀 Submit Answers";
+        btn.disabled = false;
+    }
+});
+
+</script>
+
+{% endblock %}
