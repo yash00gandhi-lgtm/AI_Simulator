@@ -1,7 +1,9 @@
 import pdfplumber
 import os
-
 import requests
+import json
+import re
+
 
 def extract_text_from_pdf(file_path):
     text = ""
@@ -14,9 +16,8 @@ def extract_text_from_pdf(file_path):
     return text
 
 
-
-
 API_KEY = os.getenv("OPENROUTER_API_KEY")
+
 
 def generate_questions_from_resume(text):
 
@@ -27,103 +28,55 @@ def generate_questions_from_resume(text):
         "Content-Type": "application/json"
     }
 
-    prompt = f"""
-You are an expert interviewer.
-
-Analyze the resume carefully and generate 5 UNIQUE, non-generic interview questions.
-
-Rules:
-- Questions MUST be based on skills, projects, or experience in the resume
-- Avoid common questions like "Tell me about yourself"
-- Make questions specific and personalized
-- Each question should be different every time
-
-Return ONLY JSON:
-[
-  {{"text": "question 1"}},
-  {{"text": "question 2"}},
-  {{"text": "question 3"}},
-  {{"text": "question 4"}},
-  {{"text": "question 5"}}
-]
-
-Resume:
-{text}
-"""
+    prompt = "Generate 5 personalized interview questions based on this resume. Return ONLY JSON in this format: [{\"text\":\"question\"}] Resume: " + text
 
     data = {
-        "model": "openai/gpt-4o-mini",   # 🔥 FIXED MODEL
+        "model": "openai/gpt-3.5-turbo",
         "messages": [
             {"role": "user", "content": prompt}
         ],
-        "temperature": 0.9
+        "temperature": 0.7
     }
 
     try:
         response = requests.post(url, headers=headers, json=data)
 
-        # 🔥 STATUS CHECK
         if response.status_code != 200:
             print("API ERROR:", response.text)
             return None
 
         result = response.json()
-
         content = result["choices"][0]["message"]["content"]
 
-        import json, re
+        try:
+            questions = json.loads(content)
+            if not isinstance(questions, list):
+                raise ValueError
+        except:
+            match = re.search(r'\[.*?\]', content, re.DOTALL)
+            if match:
+                questions = json.loads(match.group())
+            else:
+                print("RAW CONTENT:", content)
+                return None
 
-        # 🔥 SAFE JSON EXTRACTION
-        match = re.search(r'\[.*\]', content, re.DOTALL)
+        clean_questions = []
+        for q in questions:
+            if isinstance(q, dict) and "text" in q:
+                clean_questions.append({"text": q["text"]})
 
-        if match:
-            questions = json.loads(match.group())
-        else:
-            raise ValueError("Invalid JSON")
-
-        return questions
+        return clean_questions
 
     except Exception as e:
-        print("❌ QUESTION GEN ERROR:", str(e))
+        print("QUESTION ERROR:", str(e))
         return None
 
 
-
-
-
 def evaluate_answer(question, answer, resume_text):
-    import requests, json, re
 
     url = "https://openrouter.ai/api/v1/chat/completions"
 
-    prompt = f"""
-You are a strict technical interviewer.
-
-Evaluate the candidate's answer.
-
-⚠️ IMPORTANT:
-- Return ONLY valid JSON
-- Do NOT add any text before or after JSON
-- Score must be between 0 and 100
-
-FORMAT:
-
-{{
-  "score": 75,
-  "strengths": "clear explanation",
-  "weaknesses": "lacks depth",
-  "feedback": "good but can improve"
-}}
-
-Resume:
-{resume_text}
-
-Question:
-{question}
-
-Answer:
-{answer}
-"""
+    prompt = "Evaluate this answer and return JSON with score, strengths, weaknesses, feedback. Resume: " + resume_text + " Question: " + question + " Answer: " + answer
 
     headers = {
         "Authorization": f"Bearer {API_KEY}",
@@ -140,38 +93,34 @@ Answer:
 
     try:
         response = requests.post(url, headers=headers, json=data)
-        result = response.json()
 
+        result = response.json()
         content = result["choices"][0]["message"]["content"]
 
-        print("🧠 RAW AI RESPONSE:", content)
-
-        # 🔥 SAFE JSON EXTRACTION
         match = re.search(r'\{.*\}', content, re.DOTALL)
 
         if match:
             parsed = json.loads(match.group())
         else:
-            raise ValueError("No JSON found")
+            raise ValueError
 
-        # 🔥 SAFETY DEFAULTS
         return {
             "score": int(parsed.get("score", 50)),
-            "strengths": parsed.get("strengths", "Good attempt"),
-            "weaknesses": parsed.get("weaknesses", "Needs improvement"),
-            "feedback": parsed.get("feedback", "Decent answer")
+            "strengths": parsed.get("strengths", ""),
+            "weaknesses": parsed.get("weaknesses", ""),
+            "feedback": parsed.get("feedback", "")
         }
 
     except Exception as e:
-        print("❌ AI ERROR:", str(e))
-
-        # 🔥 FALLBACK (VERY IMPORTANT)
+        print("AI ERROR:", str(e))
         return {
             "score": 50,
-            "strengths": "Answer submitted",
-            "weaknesses": "AI parsing issue",
-            "feedback": "Try again"
+            "strengths": "ok",
+            "weaknesses": "improve",
+            "feedback": "try again"
         }
+
+
 def generate_result_summary(answers):
 
     total_score = sum([a.score for a in answers])
@@ -188,9 +137,8 @@ def generate_result_summary(answers):
         "roadmap": ai_data.get("roadmap", [])
     }
 
-def generate_ai_feedback(answers):
 
-    import requests, json, re
+def generate_ai_feedback(answers):
 
     url = "https://openrouter.ai/api/v1/chat/completions"
 
@@ -199,42 +147,18 @@ def generate_ai_feedback(answers):
         "Content-Type": "application/json"
     }
 
-    # 🔥 Build Q/A text
     qa_text = ""
     for a in answers:
-        qa_text += f"""
-Question: {a.question.text}
-Answer: {a.answer}
-Score: {a.score}
-"""
+        qa_text += "Question: " + a.question.text + " Answer: " + a.answer + " Score: " + str(a.score)
 
-    prompt = f"""
-You are an expert interview coach.
-
-Analyze the interview and give:
-- strengths
-- weaknesses
-- short summary
-- improvement roadmap
-
-Return ONLY JSON:
-{{
-  "strengths": [],
-  "weaknesses": [],
-  "summary": "",
-  "roadmap": []
-}}
-
-Data:
-{qa_text}
-"""
+    prompt = "Analyze interview and return JSON with strengths, weaknesses, summary, roadmap. Data: " + qa_text
 
     data = {
-        "model": "openai/gpt-4o-mini",
+        "model": "openai/gpt-3.5-turbo",
         "messages": [
             {"role": "user", "content": prompt}
         ],
-        "temperature": 0.8
+        "temperature": 0.7
     }
 
     try:
@@ -248,10 +172,10 @@ Data:
         return json.loads(match.group())
 
     except Exception as e:
-        print("AI FEEDBACK ERROR:", e)
+        print("FEEDBACK ERROR:", str(e))
         return {
             "strengths": [],
             "weaknesses": [],
-            "summary": "Could not generate AI feedback",
+            "summary": "",
             "roadmap": []
         }
