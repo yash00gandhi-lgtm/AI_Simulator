@@ -15,7 +15,7 @@ def extract_text_from_pdf(file_path):
 
 
 
-API_KEY = "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"
+API_KEY = "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"
 
 def generate_questions_from_resume(text):
 
@@ -88,7 +88,7 @@ Resume:
 
 
 
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"
 
 def evaluate_answer(question, answer, resume_text):
     import requests, json, re
