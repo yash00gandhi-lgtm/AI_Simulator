@@ -33,7 +33,7 @@ def generate_questions_from_resume(text):
     prompt = "Generate 5 personalized interview questions based on this resume. Return ONLY JSON in this format: [{\"text\":\"question\"}] Resume: " + text
 
     data = {
-        "model": "openai/gpt-3.5-turbo",
+        "model": "openai/gpt-3.5-turbo-0125",
         "messages": [
             {"role": "user", "content": prompt}
         ],
@@ -88,7 +88,7 @@ def evaluate_answer(question, answer, resume_text):
     prompt = "Evaluate this answer and return JSON with score, strengths, weaknesses, feedback. Resume: " + resume_text + " Question: " + question + " Answer: " + answer
 
     data = {
-        "model": "openai/gpt-3.5-turbo",
+        "model": "openai/gpt-3.5-turbo-0125",
         "messages": [
             {"role": "user", "content": prompt}
         ],
@@ -164,7 +164,7 @@ def generate_ai_feedback(answers):
     prompt = "Analyze interview and return JSON with strengths, weaknesses, summary, roadmap. Data: " + qa_text
 
     data = {
-        "model": "openai/gpt-3.5-turbo",
+        "model": "openai/gpt-3.5-turbo-0125",
         "messages": [
             {"role": "user", "content": prompt}
         ],
