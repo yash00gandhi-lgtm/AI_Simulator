@@ -161,7 +161,7 @@ def generate_questions(request):
 # =========================
 
 @csrf_exempt   # 🔥 ADD THIS
-@login_required
+
 def submit_answer(request):
     if request.method == "POST":
         try:
