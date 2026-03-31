@@ -89,7 +89,7 @@ Resume:
 
 
 
-API_KEY = os.getenv("OPENROUTER_API_KEY")
+
 
 def evaluate_answer(question, answer, resume_text):
     import requests, json, re
