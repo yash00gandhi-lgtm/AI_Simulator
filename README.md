@@ -70,5 +70,19 @@ python manage.py runserver
 
 Final note
 
+## 📸 Screenshots
+
+### Resume Upload
+![Upload](upload.png)
+
+### Generated Questions
+![Questions](questions.png)
+
+### Answer Section
+![Signup](signup.png)
+
+### Result
+![Result](result.png)
+
 This project is more about solving a real problem than just showcasing code.
 Still improving it as I learn more.
